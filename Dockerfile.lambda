@@ -1,0 +1,32 @@
+ARG FUNCTION_DIR="/function"
+
+FROM python:3.10-slim-bookworm
+# docker run --entrypoint sh -it python:3.10-slim-bookworm
+
+ARG FUNCTION_DIR
+RUN mkdir -p ${FUNCTION_DIR}
+WORKDIR ${FUNCTION_DIR}
+
+RUN --mount=type=cache,target=/var/cache/apt \
+    apt update -y && apt install -y \
+    curl \
+    gcc \
+    ffmpeg \
+    make
+
+RUN --mount=type=cache,target=/root/.cache/pip \
+    pip install \
+    awslambdaric \
+    openai-whisper
+
+COPY --chmod=755 docker/aws-lambda-rie /usr/local/bin/aws-lambda-rie
+
+COPY function.py ${FUNCTION_DIR}
+
+EXPOSE 8080
+
+ENV PYTHONPATH="${FUNCTION_DIR}:${PYTHONPATH}"
+
+ENTRYPOINT [ "/usr/local/bin/aws-lambda-rie", "/usr/local/bin/python", "-m", "awslambdaric" ]
+
+CMD ["function.lambda_handler"]

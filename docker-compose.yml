@@ -1,0 +1,9 @@
+# docker compose down && docker compose up --build
+# docker exec -it $(docker container ls | grep whisper | awk '{print $1}') bash
+services:
+  whisper-lambda:
+    build:
+      context: .
+      dockerfile: Dockerfile.lambda
+    ports:
+      - 8080:8080
